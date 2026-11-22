@@ -14,12 +14,23 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Unzip project
-        run: unzip -q -o jarvis-android-main.zip -d build_dir
+        run: unzip -q -o "$(ls jarvis-android-main*.zip | head -n 1)" -d build_dir
 
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
+
+      - name: Download Hey Jarvis wake word models (personal use only)
+        working-directory: build_dir/jarvis-android-main
+        run: |
+          mkdir -p app/src/debug/assets/wake
+          cd app/src/debug/assets/wake
+          B=https://github.com/dscripka/openWakeWord/releases/download/v0.5.1
+          for f in melspectrogram.onnx embedding_model.onnx hey_jarvis_v0.1.onnx; do
+            curl -fL --retry 3 -o "$f" "$B/$f" || { echo "WARNING: could not download $f"; rm -f "$f"; }
+          done
+          ls -la
 
       - name: Install Android SDK parts
         run: |
